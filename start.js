@@ -1,8 +1,5 @@
 const mongoose = require('mongoose');
 
-// Make sure we are running node 7.6+
-const [major, minor] = process.versions.node.split('.').map(parseFloat);
-
 // import environmental variables from our variables.env file
 require('dotenv').config({ path: 'variables.env' });
 
@@ -14,6 +11,9 @@ mongoose.connection.on('error', (err) => {
 });
 
 // READY?! Let's go!
+
+// import all of our models
+require('./models/Store');
 
 
 // Start our app!
