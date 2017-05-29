@@ -4,9 +4,13 @@
     "es6": true
   },
   "parserOptions": {
-    "ecmaVersion": 8
+    "ecmaVersion": 8,
+    "sourceType": "module"
   },
   "extends": "eslint:recommended",
+  "globals": {
+    "google": true
+  },
   "rules": {
     "no-unused-vars": ["error", {
       "argsIgnorePattern": "next"
