@@ -32,23 +32,28 @@ const storeSchema = new mongoose.Schema({
       required: 'You must supply an address!'
     }
   },
-  photo: String
+  photo: String,
+  author: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: 'You must supply an author'
+  }
 });
 
-storeSchema.pre('save', async function(next) {
+storeSchema.pre('save', async function (next) {
   if (!this.isModified('name')) {
     return next();
   }
   this.slug = slug(this.name);
-  const slugRegEx = new RegExp(`^(${this.slug})((-\d+$)?)$`, 'i');
+  const slugRegEx = new RegExp(`^(${this.slug})((-\\d+$)?)$`, 'i');
   const storesWithSlug = await this.constructor.find({ slug: slugRegEx });
   if (storesWithSlug.length) {
-    this.slug = `${this.slug}-${storesWithSlug.length+1}`;
+    this.slug = `${this.slug}-${storesWithSlug.length + 1}`;
   }
   next();
 });
 
-storeSchema.statics.getTagsList = function() {
+storeSchema.statics.getTagsList = function () {
   return this.aggregate([
     { $unwind: '$tags' },
     { $group: { _id: '$tags', count: { $sum: 1 } } },

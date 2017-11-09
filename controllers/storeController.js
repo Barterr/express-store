@@ -29,7 +29,7 @@ exports.addStore = (req, res) => {
 
 exports.upload = multer(multerOptions).single('photo');
 
-exports.resize = async(req, res, next) => {
+exports.resize = async (req, res, next) => {
   if (!req.file) {
     next();
     return;
@@ -42,13 +42,14 @@ exports.resize = async(req, res, next) => {
   next();
 };
 
-exports.createStore = async(req, res) => {
+exports.createStore = async (req, res) => {
+  req.body.author = req.user._id;
   const store = await (new Store(req.body)).save();
   req.flash('success', `Successfully Created ${store.name}. Care to leave a review?`);
   res.redirect(`/store/${store.slug}`);
 };
 
-exports.updateStore = async(req, res) => {
+exports.updateStore = async (req, res) => {
   req.body.location.type = 'Point';
   const store = await Store.findOneAndUpdate({
     _id: req.params.storeId
@@ -60,26 +61,32 @@ exports.updateStore = async(req, res) => {
   res.redirect(`/stores/${store._id}/edit`);
 };
 
-exports.getStores = async(req, res) => {
+exports.getStores = async (req, res) => {
   const stores = await Store.find({});
   res.render('stores', { title: 'Stores', stores });
 };
 
-exports.getStoreBySlug = async(req, res, next) => {
+exports.getStoreBySlug = async (req, res, next) => {
   const store = await Store.findOne({ slug: req.params.storeSlug });
   if (!store) return next();
   res.render('store', { store, title: store.name });
 };
 
-exports.editStore = async(req, res) => {
+const confirmOwer = (store, user) => {
+  if (!store.author.equals(user._id)) {
+    throw Error('You must own a store in order to edit it!');
+  }
+};
+
+exports.editStore = async (req, res) => {
   const store = await Store.findById(req.params.storeId);
-  // TODO: Confirm they are owner of the store
+  confirmOwer(store, req.user);
   res.render('editStore', { title: `Edit ${store.name}`, store });
 };
 
-exports.getStoresByTag = async(req, res) => {
+exports.getStoresByTag = async (req, res) => {
   const tag = req.params.tag;
-  const tagQuery = tag || { $exists: true }
+  const tagQuery = tag || { $exists: true };
   const tagsPromise = Store.getTagsList();
   const storesPromise = Store.find({ tags: tagQuery });
   const [tags, stores] = await Promise.all([tagsPromise, storesPromise]);
